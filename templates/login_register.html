@@ -1,0 +1,127 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>Login or Register</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{% static 'assets/css/bootstrap.min.css' %}">
+    <link rel="stylesheet" href="{% static 'assets/css/templatemo.css' %}">
+    <link rel="stylesheet" href="{% static 'assets/css/custom.css' %}">
+    <link rel="stylesheet" href="{% static 'assets/css/custom2.css' %}">
+</head>
+
+<body>
+    {% include 'navigation.html' %}
+    <div class="container">
+        <div class="row justify-content-center mt-5">
+            <div class="col-md-6">
+                <h2 class="text-center">Login or Register</h2>
+                <div class="card">
+                    <div class="card-body">
+                        <!-- Tab Navigation -->
+                        <ul class="nav nav-tabs" id="authTabs" role="tablist">
+                            <li class="nav-item">
+                                <a class="nav-link {% if not register_form.errors %}active{% endif %}" id="login-tab" data-bs-toggle="tab" href="#login" role="tab" aria-controls="login" aria-selected="true">Login</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link {% if register_form.errors %}active{% endif %}" id="register-tab" data-bs-toggle="tab" href="#register" role="tab" aria-controls="register" aria-selected="false">Register</a>
+                            </li>
+                        </ul>
+
+                        <!-- Tab Content -->
+                        <div class="tab-content mt-3" id="authTabsContent">
+                            <!-- Login Tab -->
+                            <div class="tab-pane fade {% if not register_form.errors %}show active{% endif %}" id="login" role="tabpanel" aria-labelledby="login-tab">
+                                <form method="post">
+                                    {% csrf_token %}
+                                    <div class="form-group">
+                                        <label for="id_username">Username</label>
+                                        {{ login_form.username }}  <!-- Render the username field -->
+                                        {% if login_form.username.errors %}
+                                            <div class="text-danger">
+                                                {% for error in login_form.username.errors %}
+                                                    <p>{{ error }}</p>
+                                                {% endfor %}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="id_password">Password</label>
+                                        {{ login_form.password }}  <!-- Render the password field -->
+                                        {% if login_form.password.errors %}
+                                            <div class="text-danger">
+                                                {% for error in login_form.password.errors %}
+                                                    <p>{{ error }}</p>
+                                                {% endfor %}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                    <button type="submit" name="login" class="btn btn-primary btn-block">Login</button>
+                                </form>
+                            </div>
+
+                            <!-- Register Tab -->
+                            <div class="tab-pane fade {% if register_form.errors %}show active{% endif %}" id="register" role="tabpanel" aria-labelledby="register-tab">
+                                <form method="post">
+                                    {% csrf_token %}
+                                    <div class="form-group">
+                                        <label for="id_username">Username</label>
+                                        {{ register_form.username }}  <!-- Render the username field -->
+                                        {% if register_form.username.errors %}
+                                            <div class="text-danger">
+                                                {% for error in register_form.username.errors %}
+                                                    <p>{{ error }}</p>
+                                                {% endfor %}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="id_email">Email</label>
+                                        {{ register_form.email }}  <!-- Render the email field -->
+                                        {% if register_form.email.errors %}
+                                            <div class="text-danger">
+                                                {% for error in register_form.email.errors %}
+                                                    <p>{{ error }}</p>
+                                                {% endfor %}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="id_password1">Password</label>
+                                        {{ register_form.password1 }}  <!-- Render the password field -->
+                                        {% if register_form.password1.errors %}
+                                            <div class="text-danger">
+                                                {% for error in register_form.password1.errors %}
+                                                    <p>{{ error }}</p>
+                                                {% endfor %}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="id_password2">Confirm Password</label>
+                                        {{ register_form.password2 }}  <!-- Render the password confirmation field -->
+                                        {% if register_form.password2.errors %}
+                                            <div class="text-danger">
+                                                {% for error in register_form.password2.errors %}
+                                                    <p>{{ error }}</p>
+                                                {% endfor %}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                    <button type="submit" name="register" class="btn btn-success btn-block">Register</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% include 'footer.html' %}
+    <script src="{% static 'assets/js/bootstrap.bundle.min.js' %}"></script>
+</body>
+
+</html>

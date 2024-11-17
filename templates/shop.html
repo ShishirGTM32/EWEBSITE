@@ -1,0 +1,135 @@
+{% load static %}
+{% load custom_filters %}
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>Shop</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="shortcut icon" type="image/x-icon" href="{% static 'assets/img/favicon.ico' %}">
+    <link rel="stylesheet" href="{% static 'assets/css/bootstrap.min.css' %}">
+    <link rel="stylesheet" href="{% static 'assets/css/templatemo.css' %}">
+    <link rel="stylesheet" href="{% static 'assets/css/custom.css' %}">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@100;200;300;400;500;700;900&display=swap">
+    <link rel="stylesheet" href="{% static 'assets/css/fontawesome.min.css' %}">
+</head>
+
+<body>
+    {% include 'navigation.html' %}
+
+    <!-- Content -->
+    {% block content %}
+    <section class="bg-light">
+        <div class="container py-5">
+            <div class="row text-center py-3">
+                <div class="col-lg-6 m-auto">
+                    <h1 class="h1">SHOP</h1>
+                    <p>ALL OF OUR PRODUCTS</p>
+                </div>
+            </div>
+
+            <!-- Filters Section -->
+            <form method="get" action="{% url 'shop' %}">
+                <div class="form-group">
+                    <label for="brand">Brand</label>
+                    <select name="brand" id="brand" class="form-control">
+                        <option value="">All Brands</option>
+                        {% for brand in brands %}
+                            <option value="{{ brand.brand_name }}" {% if brand.brand_name == selected_brand %}selected{% endif %}>
+                                {{ brand.brand_name }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="form-group mt-3">
+                    <label for="gender">Gender</label>
+                    <select name="gender" id="gender" class="form-control">
+                        <option value="">All Genders</option>
+                        <option value="Men" {% if request.GET.gender == "Men" %}selected{% endif %}>Men</option>
+                        <option value="Women" {% if request.GET.gender == "Women" %}selected{% endif %}>Women</option>
+                        <option value="Unisex" {% if request.GET.gender == "Unisex" %}selected{% endif %}>Unisex</option>
+                    </select>
+                </div>
+
+                <div class="form-group mt-3">
+                    <button type="submit" class="btn btn-primary">Filter</button>
+                </div>
+            </form>
+
+            <!-- Products Display -->
+            <div class="row">
+                {% for watch in watches %}
+                <div class="col-12 col-md-4 mb-4">
+                    <div class="card h-100">
+                        <!-- Watch Image -->
+                        <img src="{{ watch.image_url }}" class="card-img-top" alt="{{ watch.title }}">
+
+                        <div class="card-body d-flex flex-column">
+                            <!-- Watch Title -->
+                            <h5 class="card-title">{{ watch.title }}</h5>
+
+                            <!-- Watch Price and Details -->
+                            <p class="card-text">
+                                Price: ${{ watch.price }}
+                            </p>
+                            <p class="text-muted">
+                                Brand: {{ watch.brand.brand_name }} <br>
+                                Gender: {{ watch.gender.gender_name }} <br>
+                                Type: {{ watch.type.type_name }}
+                            </p>
+
+                            <!-- Add to Cart Button -->
+                            <a href="{% url 'add_to_cart' watch.watch_id %}" class="btn btn-primary mt-auto">Add to Cart</a>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            <!-- Pagination -->
+            <nav aria-label="Page navigation">
+                <ul class="pagination justify-content-center">
+                    {% if watches.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page=1" aria-label="First">
+                            <span aria-hidden="true">&laquo;&laquo;</span> First
+                        </a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ watches.previous_page_number }}" aria-label="Previous">
+                            <span aria-hidden="true">&laquo;</span> Previous
+                        </a>
+                    </li>
+                    {% endif %}
+
+                    <li class="page-item disabled">
+                        <span class="page-link">Page {{ watches.number }} of {{ watches.paginator.num_pages }}</span>
+                    </li>
+
+                    {% if watches.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ watches.next_page_number }}" aria-label="Next">
+                            Next <span aria-hidden="true">&raquo;</span>
+                        </a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ watches.paginator.num_pages }}" aria-label="Last">
+                            Last <span aria-hidden="true">&raquo;&raquo;</span>
+                        </a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+
+        </div>
+    </section>
+    {% endblock %}
+    <!-- End of content -->
+
+    {% include 'footer.html' %}
+</body>
+
+</html>

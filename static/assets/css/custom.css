@@ -1,0 +1,103 @@
+/* Set all images inside cards to have the same size */
+.card-img-top {
+    width: 100%;              /* Ensure image width stretches to fill the card */
+    height: 200px;            /* Fixed height for uniformity */
+    object-fit: contain;        /* Ensures the image covers the space, cropping if necessary */
+    object-position: center;  /* Ensures the image is centered within the space */
+}
+
+/* Smaller fonts for titles and text */
+.card-title {
+    font-size: 1rem; /* Smaller title font */
+}
+
+.card-text, .text-muted {
+    font-size: 0.875rem; /* Smaller text for price, brand, gender, and type */
+}
+
+.btn {
+    font-size: 0.875rem; /* Smaller font for the button */
+}
+
+/* General Pagination Styling */
+.pagination {
+    display: flex;                /* Use Flexbox for alignment */
+    justify-content: center;      /* Center the items horizontally */
+    gap: 20px;                    /* Add a gap of 20px between buttons */
+    margin-top: 20px;             /* Add margin to the top */
+}
+
+/* Styling for Pagination Links */
+.pagination a {
+    padding: 10px 20px;           /* Add padding to the buttons */
+    text-decoration: none;        /* Remove underline */
+    color: #333;                  /* Button text color */
+    background-color: #f4f4f4;    /* Light background color */
+    border-radius: 5px;           /* Rounded corners */
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);  /* Add subtle shadow */
+    transition: background-color 0.3s ease;    /* Smooth background transition */
+}
+
+.pagination a:hover {
+    background-color: violet;    /* Blue background on hover */
+    color: white;                 /* White text on hover */
+}
+
+.pagination span {
+    padding: 10px 20px;           /* Padding for current page */
+    background-color: #e0e0e0;    /* Gray background for current page */
+    border-radius: 5px;           /* Rounded corners */
+}
+
+.contact-form-container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+.btn-submit {
+            background-color: #4CAF50; /* Green button */
+            color: white;
+}
+
+.btn-submit:hover {
+            background-color: #45a049; /* Slightly darker green on hover */
+}
+
+.about-section {
+            background-color: white;
+            padding: 40px;
+            margin-top: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+
+        .about-section h2 {
+            color: #4CAF50;
+        }
+
+        .service-img {
+            width: 100%;
+            max-width: 400px;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+
+        .service-section {
+            background-color: #fff;
+            padding: 30px;
+            margin-top: 40px;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+
+
+.carousel-item img {
+            width: 100%;
+            height: 400px;
+            object-fit: contain;        /* Ensures the image covers the space, cropping if necessary */
+            object-position: center
+        }
+.carousel {
+            height: 400x; /* Adjust height as needed */
+        }
