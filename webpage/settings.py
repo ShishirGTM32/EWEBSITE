@@ -30,7 +30,7 @@ SECRET_KEY = config('SECRET_KEY', default='django-insecure-$mxaoh0tu_nc9-50p8t)4
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = config('DEBUG', default=False, cast=bool)
 
-ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'watchhouse.freesite.online']
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'watchhouse.freesite.online','https://ewebsite-mapd.onrender.com/']
 
 
 
