@@ -28,11 +28,11 @@ class Gender(models.Model):
 class Watch(models.Model):
     watch_id = models.AutoField(primary_key=True)
     title = models.CharField(max_length=50)
-    brand = models.ForeignKey(Brand, on_delete=models.CASCADE)  # Changed field name from brand_name to brand
+    brand = models.ForeignKey(Brand, on_delete=models.CASCADE)
     image_url = models.URLField(max_length=100)
     price = models.DecimalField(max_digits=10, decimal_places=2)
-    gender = models.ForeignKey(Gender, on_delete=models.CASCADE)  # Changed field name from gender_name to gender
-    type = models.ForeignKey(Type, on_delete=models.CASCADE)  # Changed field name from type_name to type
+    gender = models.ForeignKey(Gender, on_delete=models.CASCADE)
+    type = models.ForeignKey(Type, on_delete=models.CASCADE) 
 
     def __str__(self):
         return (
@@ -71,3 +71,52 @@ class User(AbstractUser):
 
     def __str__(self):
         return self.username
+
+class Order(models.Model):
+    STATUS_CHOICES = [
+        ('Pending', 'Pending'),
+        ('Paid', 'Paid'),
+        ('Shipped', 'Shipped'),
+        ('Delivered', 'Delivered'),
+        ('Cancelled', 'Cancelled'),
+    ]
+
+    PAYMENT_METHOD_CHOICES = [
+        ('credit_card', 'Credit Card'),
+        ('paypal', 'PayPal'),
+    ]
+
+    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    total_price = models.DecimalField(max_digits=10, decimal_places=2)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='Pending')
+    shipping_address = models.TextField()
+    shipping_city = models.CharField(max_length=255)
+    shipping_postal_code = models.CharField(max_length=20)
+    shipping_country = models.CharField(max_length=255)
+    email = models.EmailField()
+    payment_method = models.CharField(max_length=20, choices=PAYMENT_METHOD_CHOICES)
+
+    def __str__(self):
+        return f"Order #{self.id} by {self.user}"
+
+    def get_order_items(self):
+        return self.order_items.all()
+
+    def calculate_total(self):
+        total = sum(item.get_total_price() for item in self.get_order_items())
+        self.total_price = total
+        self.save()
+
+class OrderItem(models.Model):
+    order = models.ForeignKey(Order, related_name='order_items', on_delete=models.CASCADE)
+    product = models.ForeignKey(Watch, on_delete=models.SET_NULL, null=True, blank=True)
+    price = models.DecimalField(max_digits=10, decimal_places=2)
+    quantity = models.PositiveIntegerField()
+
+    def __str__(self):
+        return f"{self.quantity} x {self.product.title}"
+
+    def get_total_price(self):
+        return self.price * self.quantity

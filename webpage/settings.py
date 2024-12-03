@@ -12,7 +12,7 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 
 from pathlib import Path
 import os
-from decouple import config, Csv
+from decouple import config
 from dotenv import load_dotenv
 load_dotenv()  # Load environment variables from a .env file
 
@@ -30,7 +30,7 @@ SECRET_KEY = config('SECRET_KEY', default='django-insecure-$mxaoh0tu_nc9-50p8t)4
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = config('DEBUG', default=False, cast=bool)
 
-ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'watchhouse.freesite.online','https://ewebsite-mapd.onrender.com/']
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'watchhouse.freesite.online']
 
 
 
@@ -104,6 +104,7 @@ DATABASES = {
 import pymysql
 pymysql.install_as_MySQLdb()
 
+AUTH_USER_MODEL = 'web.User'
 
 # Password validation
 # https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators
@@ -123,6 +124,8 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+DEFAULT_FROM_EMAIL = 'your-email@example.com'
 
 # Internationalization
 # https://docs.djangoproject.com/en/5.1/topics/i18n/
