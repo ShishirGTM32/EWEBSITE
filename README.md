@@ -1,7 +1,7 @@
 <html>
   
 <body>
-  <a href = "https://watchhouse.onrender.com"><h1>WatchHouse</h1></a>a><br><br>
+  <a href = "https://watchhouse.onrender.com"><h1>WatchHouse</h1></a><br><br>
 
   
 This is the ecommerce platform for the buying of the watches sorry because of database problem I was not unable to upload into remder or other webpage.<br><br>
