@@ -12,9 +12,12 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 
 from pathlib import Path
 import os
+import environ
 from decouple import config
 from dotenv import load_dotenv
 load_dotenv()  # Load environment variables from a .env file
+env = environ.Env()
+environ.Env.read_env()
 
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -25,12 +28,15 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = config('SECRET_KEY', default='django-insecure-$mxaoh0tu_nc9-50p8t)4tc)t1u4k87x_!%z8)qozh8fc0wk6x')
+#SECRET_KEY = config('SECRET_KEY', default='django-insecure-$mxaoh0tu_nc9-50p8t)4tc)t1u4k87x_!%z8)qozh8fc0wk6x')
+SECRET_KEY = env('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = config('DEBUG', default=False, cast=bool)
+#DEBUG = config('DEBUG', default=False, cast=bool)
+DEBUG = env.bool('DEBUG', default=False)
 
-ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'watchhouse.freesite.online']
+#ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'watchhouse.freesite.online']
+ALLOWED_HOSTS = env('ALLOWED_HOSTS').split(',')
 
 
 
@@ -92,17 +98,17 @@ WSGI_APPLICATION = 'webpage.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': os.environ.get('DB_NAME'),
-        'USER': os.environ.get('DB_USER'),
-        'PASSWORD': os.environ.get('DB_PASSWORD'),
-        'HOST': os.environ.get('DB_HOST'),
-        'PORT': os.environ.get('DB_PORT'),
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': env('DB_NAME'),
+        'USER': env('DB_USER'),
+        'PASSWORD': env('DB_PASSWORD'),
+        'HOST': env('DB_HOST'),
+        'PORT': env('DB_PORT'),
     }
 }
 
-import pymysql
-pymysql.install_as_MySQLdb()
+# import pymysql
+# pymysql.install_as_MySQLdb()
 
 AUTH_USER_MODEL = 'web.User'
 
@@ -152,3 +158,10 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 
 # Account if0_37733811 (Website for WatchHouse.freesite.online) created!
+
+#DB_NAME=watch
+#DB_USER=root
+#DB_PASSWORD=decoy32
+#DB_HOST=localhost
+#DB_PORT=3306
+#ALLOWED_HOSTS=localhost,127.0.0.1,watchhouse.freesite.online

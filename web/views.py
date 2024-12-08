@@ -3,14 +3,14 @@ from django.db.utils import OperationalError
 from django.http import HttpResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import authenticate, login, logout
-from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required
-from django.core.paginator import Paginator
-from .forms import ContactForm, LoginForm, RegisterForm
 from django.contrib import messages
-from .models import Watch, Brand, Gender, Type, Order, OrderItem
 from django.core.mail import send_mail
 from django.conf import settings
+from django.core.paginator import Paginator
+from .models import Watch, Brand, Gender, Type, Order, OrderItem
+from .forms import ContactForm, LoginForm, RegisterForm
+
 
 def check_db_connection():
     try:
@@ -22,7 +22,7 @@ def check_db_connection():
 # Home index view
 def index(request):
     if check_db_connection():
-        watches = Watch.objects.all()[:12]
+        watches = Watch.objects.all()[:12]  # Display top 12 watches for the homepage
         return render(request, 'index.html', {'watches': watches})
     else:
         return HttpResponse("Database connection failed. Please check your database settings.")
@@ -52,6 +52,7 @@ def add_to_cart(request, watch_id):
     except Watch.DoesNotExist:
         return HttpResponse("Watch not found.", status=404)
 
+    # Initialize or update cart
     if 'cart' not in request.session:
         request.session['cart'] = {}
 
@@ -61,7 +62,7 @@ def add_to_cart(request, watch_id):
         cart[str(watch.watch_id)]['quantity'] += 1
     else:
         cart[str(watch.watch_id)] = {
-            'watch_id': watch.watch_id,  # Ensure watch_id is stored
+            'watch_id': watch.watch_id,
             'name': watch.title,
             'price': float(watch.price),
             'image_url': watch.image_url,
@@ -71,23 +72,19 @@ def add_to_cart(request, watch_id):
     request.session.modified = True
     return redirect('shop')
 
-
 def shop_view(request):
-    # Get all available brands, genders, and types for the filters
+    # Filter Watches based on brand, gender, type, and price range
     brands = Brand.objects.all()
     genders = Gender.objects.all()
     types = Type.objects.all()
 
-    # Get the selected filters from GET parameters
     selected_brand = request.GET.get('brand', None)
     selected_gender = request.GET.get('gender', None)
     selected_price_range = request.GET.get('price_range', None)
     selected_type = request.GET.get('type', None)
 
-    # Start with all watches
     watches = Watch.objects.all()
 
-    # Apply filters based on user selection
     if selected_brand:
         watches = watches.filter(brand__brand_name=selected_brand)
 
@@ -95,27 +92,26 @@ def shop_view(request):
         watches = watches.filter(gender__gender_name=selected_gender)
 
     if selected_price_range:
-        # Split the price range into min and max values
-        if selected_price_range == "0-50":
-            watches = watches.filter(price__gte=0, price__lte=50)
-        elif selected_price_range == "51-100":
-            watches = watches.filter(price__gte=51, price__lte=100)
-        elif selected_price_range == "101-200":
-            watches = watches.filter(price__gte=101, price__lte=200)
-        elif selected_price_range == "201-500":
-            watches = watches.filter(price__gte=201, price__lte=500)
-        elif selected_price_range == "500+":
-            watches = watches.filter(price__gte=500)
+        price_ranges = {
+            "0-50": (0, 50),
+            "51-100": (51, 100),
+            "101-200": (101, 200),
+            "201-500": (201, 500),
+            "500+": (500, None)
+        }
+        min_price, max_price = price_ranges.get(selected_price_range, (None, None))
+        if min_price is not None:
+            watches = watches.filter(price__gte=min_price)
+        if max_price is not None:
+            watches = watches.filter(price__lte=max_price)
 
     if selected_type:
         watches = watches.filter(type__type_name=selected_type)
 
-    # Paginate the filtered list of watches
-    paginator = Paginator(watches, 9)  # Show 9 watches per page
+    paginator = Paginator(watches, 9)  # Paginate results to 9 items per page
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
 
-    # Pass the context to the template
     context = {
         'watches': page_obj,
         'brands': brands,
@@ -129,26 +125,85 @@ def shop_view(request):
 
     return render(request, 'shop.html', context)
 
-# Cart template
+# Cart template view
 def cart_view(request):
     cart = request.session.get('cart', {})
-
-    total_price = sum(
-        float(item['price']) * int(item['quantity'])
-        for item in cart.values()
-    )
-
+    total_price = sum(float(item['price']) * item['quantity'] for item in cart.values())
     return render(request, 'cart.html', {'cart': cart, 'total_price': total_price})
-
 
 def clear_cart(request):
     request.session['cart'] = {}
     return redirect('cart')
 
-def checkout(request):
-    return render(request, 'checkout.html')
+# Checkout view
+@login_required
+def checkout_view(request):
+    cart = request.session.get('cart', {})
+    if not cart:
+        return redirect('shop')
 
-# Login register templates
+    total_price = sum(item['price'] * item['quantity'] for item in cart.values())
+
+    if request.method == 'POST':
+        shipping_address = request.POST.get('shipping_address')
+        shipping_city = request.POST.get('shipping_city')
+        shipping_postal_code = request.POST.get('shipping_postal_code')
+        shipping_country = request.POST.get('shipping_country')
+        email = request.POST.get('email')
+
+        # Create the order only if user is authenticated
+        if request.user.is_authenticated:
+            order = Order.objects.create(
+                user=request.user,
+                total_price=total_price,
+                shipping_address=shipping_address,
+                shipping_city=shipping_city,
+                shipping_postal_code=shipping_postal_code,
+                shipping_country=shipping_country,
+                email=email
+            )
+
+            for watch_id, item in cart.items():
+                watch = Watch.objects.get(watch_id=watch_id)
+                OrderItem.objects.create(
+                    order=order,
+                    product=watch,
+                    price=item['price'],
+                    quantity=item['quantity']
+                )
+
+            send_confirmation_email(order)
+            del request.session['cart']  # Clear the cart after the order is placed
+
+            return redirect('order_success_view', order_id=order.id)
+        else:
+            return HttpResponse("You must be logged in to place an order.", status=401)
+
+    return render(request, 'checkout.html', {'cart': cart, 'total_price': total_price})
+
+# Order confirmation email
+def send_confirmation_email(order):
+    subject = f"Order Confirmation - Order #{order.id}"
+    message = f"Thank you for your order!\n\nOrder Summary:\n\n"
+    message += f"Order ID: {order.id}\n"
+    message += f"Shipping Address: {order.shipping_address}\n"
+    message += f"Total Price: ${order.total_price}\n\n"
+    message += "Items in your order:\n"
+
+    for item in order.get_order_items():
+        message += f"- {item.product.title} (x{item.quantity}) - ${item.price * item.quantity}\n"
+
+    message += "\nThank you for shopping with us!"
+
+    send_mail(
+        subject,
+        message,
+        settings.DEFAULT_FROM_EMAIL,
+        [order.user.email],
+        fail_silently=False,
+    )
+
+# Login/register view
 def login_register_view(request):
     if request.user.is_authenticated:
         return redirect('account')
@@ -183,138 +238,68 @@ def login_register_view(request):
         'register_form': register_form,
     })
 
+# Account view
 @login_required
 def account_view(request):
-    user = request.user
-    return render(request, 'account.html', {'user': user})
+    return render(request, 'account.html', {'user': request.user})
 
+# Logout view
 def logout_view(request):
-    # Log out the user
     logout(request)
-    # Redirect to the homepage or any other page you prefer
     return redirect('index')
 
-# Checkout view
-def checkout_view(request):
-    cart = request.session.get('cart', {})
-
-    if not cart:
-        return redirect('shop')  # If no cart, redirect to shop
-
-    # Calculate the total price of the cart
-    total_price = sum(item['price'] * item['quantity'] for item in cart.values())
-
-    if request.method == 'POST':
-        # Extract shipping information from the form
-        shipping_address = request.POST.get('shipping_address')
-        shipping_city = request.POST.get('shipping_city')
-        shipping_postal_code = request.POST.get('shipping_postal_code')
-        shipping_country = request.POST.get('shipping_country')
-        email = request.POST.get('email')
-
-        # Create the order
-        order = Order.objects.create(
-            user=request.user,  # Ensure request.user is an instance of User
-            total_price=total_price,
-            shipping_address=shipping_address,
-            shipping_city=shipping_city,
-            shipping_postal_code=shipping_postal_code,
-            shipping_country=shipping_country,
-            email=email
-        )
-
-        # Add items to the order
-        for watch_id, item in cart.items():
-            watch = Watch.objects.get(watch_id=watch_id)
-            OrderItem.objects.create(
-                order=order,
-                product=watch,
-                price=item['price'],
-                quantity=item['quantity']
-            )
-
-        # Send order confirmation email
-        send_confirmation_email(order)
-
-        # Clear cart after order is placed
-        del request.session['cart']
-
-        # Redirect to order success page
-        return redirect('order_success_view', order_id=order.id)
-
-    context = {
-        'cart': cart,
-        'total_price': total_price
-    }
-    return render(request, 'checkout.html', context)
-
-def send_confirmation_email(order):
-    subject = f"Order Confirmation - Order #{order.id}"
-    message = f"Thank you for your order!\n\nOrder Summary:\n\n"
-    message += f"Order ID: {order.id}\n"
-    message += f"Shipping Address: {order.shipping_address}\n"
-    message += f"Payment Method: {order.payment_method}\n"
-    message += f"Total Price: ${order.total_price}\n\n"
-    message += "Items in your order:\n"
-
-    for item in order.get_order_items():
-        message += f"- {item.product.title} (x{item.quantity}) - ${item.price * item.quantity}\n"
-
-    message += "\nThank you for shopping with us!"
-
-    # Send email to the user
-    send_mail(
-        subject,
-        message,
-        settings.DEFAULT_FROM_EMAIL,
-        [order.user.email],
-        fail_silently=False,
-    )
-
+# Order success view
 def order_success_view(request, order_id):
-    # Retrieve the order using the order_id from the URL
     order = get_object_or_404(Order, id=order_id)
-
-    # Render the success page with the order details
     return render(request, 'order_success.html', {'order': order})
+
 
 def place_order(request):
     if request.method == "POST":
-        # Ensure you're capturing all form fields properly
         shipping_address = request.POST.get('address')
         shipping_city = request.POST.get('city')
         shipping_postal_code = request.POST.get('postal_code')
         shipping_country = request.POST.get('country')
         payment_method = request.POST.get('payment_method')
 
-        # Ensure that the required fields are not empty
         if not shipping_address:
             return HttpResponse("Shipping address is required.", status=400)
 
-        # Get cart from session and calculate the total price
         cart = request.session.get('cart', {})
         total_price = sum(
             float(item['price']) * int(item['quantity'])
             for item in cart.values()
         )
 
-        # Creating an order in the database
-        order = Order.objects.create(
-            user=request.user,
-            total_price=total_price,
-            shipping_address=shipping_address,
-            shipping_city=shipping_city,
-            shipping_postal_code=shipping_postal_code,
-            shipping_country=shipping_country,
-            email=request.user.email,
-            payment_method=payment_method,
-        )
+        if request.user.is_authenticated:
+            user = request.user
 
-        # Optionally clear the cart after placing the order
-        request.session['cart'] = {}
+            order = Order.objects.create(
+                user=user,
+                total_price=total_price,
+                shipping_address=shipping_address,
+                shipping_city=shipping_city,
+                shipping_postal_code=shipping_postal_code,
+                shipping_country=shipping_country,
+                payment_method=payment_method,
+                email=user.email
+            )
 
-        # Redirect to the order success page, passing the order's ID
-        return redirect('order_success', order_id=order.id)
+            for watch_id, item in cart.items():
+                watch = Watch.objects.get(watch_id=watch_id)
+                OrderItem.objects.create(
+                    order=order,
+                    product=watch,
+                    price=item['price'],
+                    quantity=item['quantity']
+                )
 
-    else:
-        return HttpResponse("Invalid method.", status=405)
+            # Optionally send confirmation email
+            send_confirmation_email(order)
+            del request.session['cart']  # Clear the cart after placing the order
+
+            return redirect('order_success_view', order_id=order.id)
+        else:
+            return HttpResponse("You must be logged in to place an order.", status=401)
+
+    return HttpResponse("Invalid request method.", status=405)
