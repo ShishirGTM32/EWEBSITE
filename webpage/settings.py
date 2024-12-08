@@ -76,7 +76,7 @@ SESSION_COOKIE_SECURE = True
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [os.path.join(BASE_DIR, 'templates')],  # Corrected path to templates
+        'DIRS': [os.path.join(BASE_DIR, 'template')],  # Corrected path to templates
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
