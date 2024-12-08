@@ -1,0 +1,64 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contact Us</title>
+    <link rel="stylesheet" href="{% static 'css/contact.css' %}">
+    <link rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Roboto:wght@100;200;300;400;500;700;900&display=swap">
+</head>
+
+<body>
+
+    {% include 'navigation.html' %}
+
+    <div class="container mt-5">
+        <div class="row">
+            <!-- Left Contact Details Section -->
+            <div class="col-md-6">
+                <div class="contact-details">
+                    <h4>Address</h4>
+                    <p>Kirtipur</p>
+
+                    <h4>Let's Talk</h4>
+                    <p><a href="tel:+9770000000000">+977 0000000000</a></p>
+
+                    <h4>General Support</h4>
+                    <p><a href="mailto:shishir@gautam.com">shishir@gautam.com</a></p>
+                </div>
+            </div>
+
+            <!-- Right Contact Form Section -->
+            <div class="col-md-6">
+                <div class="contact-form">
+                    <h2 class="text-center mb-4">Send Us A Message</h2>
+                    <form method="POST">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            {{ form.first_name }}
+                        </div>
+                        <div class="mb-3">
+                            {{ form.last_name }}
+                        </div>
+                        <div class="mb-3">
+                            {{ form.email }}
+                        </div>
+                        <div class="mb-3">
+                            {{ form.message }}
+                        </div>
+                        <button type="submit" class="btn btn-custom w-100">Send Message</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% include 'footer.html' %}
+
+</body>
+
+</html>

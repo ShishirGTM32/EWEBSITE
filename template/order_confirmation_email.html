@@ -1,0 +1,74 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Order Confirmation - #{{ order.id }}</title>
+    <link rel="stylesheet" href="{% static 'css/bootstrap.min.css' %}">
+</head>
+
+<body>
+    <!-- Start of the email content -->
+    <div class="container my-4">
+        <!-- Navigation Header (Optional) -->
+        <div>
+            {% include 'navigation.html' %}
+        </div>
+
+        <div class="text-center my-4">
+            <h1>Order Confirmation</h1>
+            <p class="lead">Thank you for your order. Your order details are below:</p>
+        </div>
+
+        <div class="order-details mb-4">
+            <h3>Order Summary</h3>
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th scope="col">Product</th>
+                        <th scope="col">Price</th>
+                        <th scope="col">Quantity</th>
+                        <th scope="col">Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in order.order_items.all %}
+                    <tr>
+                        <td>{{ item.product.title }}</td>
+                        <td>${{ item.price }}</td>
+                        <td>{{ item.quantity }}</td>
+                        <td>${{ item.price|multiply:item.quantity }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+
+            <div class="mt-4">
+                <h4>Total Price: ${{ order.total_price }}</h4>
+            </div>
+        </div>
+
+        <div class="my-4">
+            <h3>Shipping Address</h3>
+            <p>{{ order.shipping_address }}</p>
+            <p>{{ order.shipping_city }}, {{ order.shipping_postal_code }}</p>
+            <p>{{ order.shipping_country }}</p>
+        </div>
+
+        <div class="my-4 text-center">
+            <p>If you have any questions, feel free to contact us!</p>
+            <a href="mailto:support@yourstore.com" class="btn btn-primary">Contact Support</a>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer mt-4">
+            {% include 'footer.html' %}
+        </div>
+    </div>
+    <!-- End of the email content -->
+</body>
+
+</html>
