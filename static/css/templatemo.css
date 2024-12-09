@@ -49,7 +49,7 @@ body, ul, li, p, a, label, input, div {
   font-size: 22px !important;
 }
 /* General */
-.logo { font-weight: 500 !important;}
+.logo { font-weight: 8vm !important;}
 .text-warning {  color: #ede861 !important;}
 .text-muted { color: #bcbcbc !important;}
 .text-success { color: #59ab6e !important;}
