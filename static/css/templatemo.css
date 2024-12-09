@@ -1,9 +1,4 @@
 /*
-
-TemplateMo 559 Zay Shop
-
-https://templatemo.com/tm-559-zay-shop
-
 ---------------------------------------------
 Table of contents
 ------------------------------------------------
@@ -74,8 +69,7 @@ body, ul, li, p, a, label, input, div {
 #templatemo_main_nav a:hover { color: #69bb7e;}
 #templatemo_main_nav .navbar .nav-icon { margin-right: 20px;}
 
-/* Hero Carousel */
-#template-mo-zay-hero-carousel { background: #efefef !important;}
+
 /* Accordion */
 .templatemo-accordion a { color: #000;}
 .templatemo-accordion a:hover { color: #333d4a;}
@@ -115,15 +109,6 @@ body, ul, li, p, a, label, input, div {
   opacity: 1;
 }
 /* Carousel Hero */
-#template-mo-zay-hero-carousel .carousel-indicators li {
-  margin-top: -50px;
-  background-color: #59ab6e;
-}
-#template-mo-zay-hero-carousel .carousel-control-next i,
-#template-mo-zay-hero-carousel .carousel-control-prev i {
-  color: #59ab6e !important;
-  font-size: 2.8em !important;
-}
 /* Carousel Brand */
 .tempaltemo-carousel .h1 {
   font-size: .5em !important;
@@ -179,7 +164,6 @@ body, ul, li, p, a, label, input, div {
 /* Large devices (desktops, 992px and up)*/
 @media (min-width: 992px) {
   #templatemo_main_nav .navbar-nav {max-width: 550px;}
-  #template-mo-zay-hero-carousel .carousel-item {min-height: 30rem !important;}
   .product-wap .h3, .product-wap li, .product-wap i, .product-wap p {font-size: 18px !important;}
   .product-wap .product-color-dot {
     width: 12px;
