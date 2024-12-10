@@ -108,60 +108,6 @@ def add_to_cart(request, watch_id):
     messages.success(request, f"{watch.title} has been added to your cart.")
     return redirect('shop')
 
-
-def shop_view(request):
-    brands = Brand.objects.all()
-    genders = Gender.objects.all()
-    types = Type.objects.all()
-
-    selected_brand = request.GET.get('brand', None)
-    selected_gender = request.GET.get('gender', None)
-    selected_price_range = request.GET.get('price_range', None)
-    selected_type = request.GET.get('type', None)
-
-    watches = Watch.objects.all()
-
-    if selected_brand:
-        watches = watches.filter(brand__brand_name=selected_brand)
-
-    if selected_gender:
-        watches = watches.filter(gender__gender_name=selected_gender)
-
-    if selected_price_range:
-        price_ranges = {
-            "0-50": (0, 50),
-            "51-100": (51, 100),
-            "101-200": (101, 200),
-            "201-500": (201, 500),
-            "500+": (500, None)
-        }
-        min_price, max_price = price_ranges.get(selected_price_range, (None, None))
-        if min_price is not None:
-            watches = watches.filter(price__gte=min_price)
-        if max_price is not None:
-            watches = watches.filter(price__lte=max_price)
-
-    if selected_type:
-        watches = watches.filter(type__type_name=selected_type)
-
-    paginator = Paginator(watches, 9)
-    page_number = request.GET.get('page')
-    page_obj = paginator.get_page(page_number)
-
-    context = {
-        'watches': page_obj,
-        'brands': brands,
-        'genders': genders,
-        'types': types,
-        'selected_brand': selected_brand,
-        'selected_gender': selected_gender,
-        'selected_price_range': selected_price_range,
-        'selected_type': selected_type,
-    }
-
-    return render(request, 'shop.html', context)
-
-
 def cart_view(request):
     cart = request.session.get('cart', {})
     total_price = sum(float(item['price']) * item['quantity'] for item in cart.values())
@@ -301,33 +247,28 @@ def place_order(request):
 
 
 def update_quantity(request, watch_id, action):
-    # Get the cart from session
     cart = request.session.get('cart', {})
 
-    # Get the watch object by using watch_id instead of id
     try:
         watch = Watch.objects.get(watch_id=watch_id)
     except Watch.DoesNotExist:
         return HttpResponse('Product not found', status=404)
 
-    # Get current item from the cart
     item = cart.get(str(watch.watch_id), None)
     if not item:
         return HttpResponse('Item not in cart', status=404)
 
-    # Update quantity based on action
     if action == 'increase':
         item['quantity'] += 1
     elif action == 'decrease':
         if item['quantity'] > 1:
             item['quantity'] -= 1
         else:
-            del cart[str(watch.watch_id)]  # Remove item if quantity reaches 0
+            del cart[str(watch.watch_id)] 
     
     if item['quantity'] == 0:
-        del cart[str(watch.watch_id)]  # Ensure item is removed if quantity becomes zero
+        del cart[str(watch.watch_id)]  
     
-    # Save the updated cart back to the session
     request.session['cart'] = cart
 
     return redirect('cart')
@@ -336,7 +277,7 @@ def remove_item(request, watch_id):
     cart = request.session.get('cart', {})
 
     if str(watch_id) in cart:
-        del cart[str(watch_id)]  # Remove the item from the cart
+        del cart[str(watch_id)]
         request.session['cart'] = cart
         request.session.modified = True
         messages.success(request, "Item removed from the cart.")
