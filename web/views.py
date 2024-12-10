@@ -19,18 +19,19 @@ def check_db_connection():
     except OperationalError:
         return False
 
-# Home index view
+
 def index(request):
     if check_db_connection():
-        watches = Watch.objects.all()[:12]  # Display top 12 watches for the homepage
+        watches = Watch.objects.all()[:12]
         return render(request, 'index.html', {'watches': watches})
     else:
         return HttpResponse("Database connection failed. Please check your database settings.")
 
+
 def about(request):
     return render(request, 'about.html')
 
-# Contact template view
+
 def contact(request):
     if request.method == 'POST':
         form = ContactForm(request.POST)
@@ -39,20 +40,54 @@ def contact(request):
             return redirect('contact_thank_you')
     else:
         form = ContactForm()
-
     return render(request, 'contact.html', {'form': form})
+
 
 def thank_you_view(request):
     return render(request, 'thank_you.html')
 
-# Shop template views
+def login_register_view(request):
+    if request.user.is_authenticated:
+        return redirect('account')
+
+    login_form = LoginForm(request.POST or None)
+    register_form = RegisterForm(request.POST or None)
+
+    if request.method == 'POST':
+        if 'login' in request.POST:
+            if login_form.is_valid():
+                username = login_form.cleaned_data['username']
+                password = login_form.cleaned_data['password']
+                user = authenticate(request, username=username, password=password)
+                if user is not None:
+                    login(request, user)
+                    return redirect('account')
+                else:
+                    messages.error(request, 'Invalid username or password.')
+            else:
+                messages.error(request, 'Please correct the errors below.')
+
+        elif 'register' in request.POST:
+            if register_form.is_valid():
+                register_form.save()
+                messages.success(request, 'Account created successfully! Please log in.')
+                return redirect('login_register')
+            else:
+                messages.error(request, 'Please correct the errors below.')
+
+    return render(request, 'login_register.html', {
+        'login_form': login_form,
+        'register_form': register_form,
+    })
+
+
+@login_required(login_url='login_register')
 def add_to_cart(request, watch_id):
     try:
         watch = Watch.objects.get(watch_id=watch_id)
     except Watch.DoesNotExist:
         return HttpResponse("Watch not found.", status=404)
 
-    # Initialize or update cart
     if 'cart' not in request.session:
         request.session['cart'] = {}
 
@@ -70,10 +105,11 @@ def add_to_cart(request, watch_id):
         }
 
     request.session.modified = True
+    messages.success(request, f"{watch.title} has been added to your cart.")
     return redirect('shop')
 
+
 def shop_view(request):
-    # Filter Watches based on brand, gender, type, and price range
     brands = Brand.objects.all()
     genders = Gender.objects.all()
     types = Type.objects.all()
@@ -108,7 +144,7 @@ def shop_view(request):
     if selected_type:
         watches = watches.filter(type__type_name=selected_type)
 
-    paginator = Paginator(watches, 9)  # Paginate results to 9 items per page
+    paginator = Paginator(watches, 9)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
 
@@ -125,7 +161,7 @@ def shop_view(request):
 
     return render(request, 'shop.html', context)
 
-# Cart template view
+
 def cart_view(request):
     cart = request.session.get('cart', {})
     total_price = sum(float(item['price']) * item['quantity'] for item in cart.values())
@@ -135,8 +171,6 @@ def clear_cart(request):
     request.session['cart'] = {}
     return redirect('cart')
 
-# Checkout view
-@login_required
 def checkout_view(request):
     cart = request.session.get('cart', {})
     if not cart:
@@ -151,7 +185,6 @@ def checkout_view(request):
         shipping_country = request.POST.get('shipping_country')
         email = request.POST.get('email')
 
-        # Create the order only if user is authenticated
         if request.user.is_authenticated:
             order = Order.objects.create(
                 user=request.user,
@@ -173,7 +206,7 @@ def checkout_view(request):
                 )
 
             send_confirmation_email(order)
-            del request.session['cart']  # Clear the cart after the order is placed
+            del request.session['cart']
 
             return redirect('order_success_view', order_id=order.id)
         else:
@@ -181,7 +214,7 @@ def checkout_view(request):
 
     return render(request, 'checkout.html', {'cart': cart, 'total_price': total_price})
 
-# Order confirmation email
+
 def send_confirmation_email(order):
     subject = f"Order Confirmation - Order #{order.id}"
     message = f"Thank you for your order!\n\nOrder Summary:\n\n"
@@ -203,52 +236,15 @@ def send_confirmation_email(order):
         fail_silently=False,
     )
 
-# Login/register view
-def login_register_view(request):
-    if request.user.is_authenticated:
-        return redirect('account')
-
-    login_form = LoginForm(request.POST or None)
-    register_form = RegisterForm(request.POST or None)
-
-    if request.method == 'POST':
-        if 'login' in request.POST:
-            if login_form.is_valid():
-                username = login_form.cleaned_data['username']
-                password = login_form.cleaned_data['password']
-                user = authenticate(request, username=username, password=password)
-                if user is not None:
-                    login(request, user)
-                    return redirect('account')
-                else:
-                    messages.error(request, 'Invalid username or password.')
-            else:
-                messages.error(request, 'Please correct the errors below.')
-
-        elif 'register' in request.POST:
-            if register_form.is_valid():
-                register_form.save()
-                messages.success(request, 'Account created successfully!')
-                return redirect('login_register')
-            else:
-                messages.error(request, 'Please correct the errors below.')
-
-    return render(request, 'login_register.html', {
-        'login_form': login_form,
-        'register_form': register_form,
-    })
-
-# Account view
-@login_required
 def account_view(request):
     return render(request, 'account.html', {'user': request.user})
 
-# Logout view
+
 def logout_view(request):
     logout(request)
     return redirect('index')
 
-# Order success view
+
 def order_success_view(request, order_id):
     order = get_object_or_404(Order, id=order_id)
     return render(request, 'order_success.html', {'order': order})
@@ -294,12 +290,57 @@ def place_order(request):
                     quantity=item['quantity']
                 )
 
-            # Optionally send confirmation email
             send_confirmation_email(order)
-            del request.session['cart']  # Clear the cart after placing the order
+            del request.session['cart']
 
             return redirect('order_success_view', order_id=order.id)
         else:
             return HttpResponse("You must be logged in to place an order.", status=401)
 
     return HttpResponse("Invalid request method.", status=405)
+
+
+def update_quantity(request, watch_id, action):
+    # Get the cart from session
+    cart = request.session.get('cart', {})
+
+    # Get the watch object by using watch_id instead of id
+    try:
+        watch = Watch.objects.get(watch_id=watch_id)
+    except Watch.DoesNotExist:
+        return HttpResponse('Product not found', status=404)
+
+    # Get current item from the cart
+    item = cart.get(str(watch.watch_id), None)
+    if not item:
+        return HttpResponse('Item not in cart', status=404)
+
+    # Update quantity based on action
+    if action == 'increase':
+        item['quantity'] += 1
+    elif action == 'decrease':
+        if item['quantity'] > 1:
+            item['quantity'] -= 1
+        else:
+            del cart[str(watch.watch_id)]  # Remove item if quantity reaches 0
+    
+    if item['quantity'] == 0:
+        del cart[str(watch.watch_id)]  # Ensure item is removed if quantity becomes zero
+    
+    # Save the updated cart back to the session
+    request.session['cart'] = cart
+
+    return redirect('cart')
+
+def remove_item(request, watch_id):
+    cart = request.session.get('cart', {})
+
+    if str(watch_id) in cart:
+        del cart[str(watch_id)]  # Remove the item from the cart
+        request.session['cart'] = cart
+        request.session.modified = True
+        messages.success(request, "Item removed from the cart.")
+    else:
+        messages.error(request, "Item not found in the cart.")
+
+    return redirect('cart')

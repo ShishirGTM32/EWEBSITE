@@ -1,6 +1,5 @@
 from django import forms
 from django.core.exceptions import ValidationError
-from django.core.validators import RegexValidator
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from web.models import User  # Import your custom User model
 from .models import Contact
@@ -12,7 +11,7 @@ class CustomUserCreationForm(UserCreationForm):
     last_name = forms.CharField(max_length=100, required=False)
 
     class Meta:
-        model = User
+        model = User  # Use your custom user model here
         fields = ['username', 'email', 'first_name', 'last_name', 'password1', 'password2']
 
     def clean_email(self):
@@ -66,45 +65,17 @@ class LoginForm(forms.Form):
         'class': 'form-control', 'placeholder': 'Password'
     }))
 
-# Register Form 
-password_validator = RegexValidator(
-    regex=r'^(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,20}$',
-    message="Password must be 8-20 characters long, contain at least one uppercase letter, one number, and one special character."
-)
+# Register Form (No change needed, already using UserCreationForm)
 class RegisterForm(UserCreationForm):
     email = forms.EmailField(required=True, widget=forms.EmailInput(attrs={
         'class': 'form-control', 'placeholder': 'Email'
     }))
 
-    password1 = forms.CharField(
-        widget=forms.PasswordInput(attrs={
-            'class': 'form-control', 'placeholder': 'Password'
-        }),
-        validators=[password_validator], 
-    )
-
-    password2 = forms.CharField(
-        widget=forms.PasswordInput(attrs={
-            'class': 'form-control', 'placeholder': 'Confirm Password'
-        })
-    )
-
     class Meta:
-        model = User
+        model = User  # Use your custom user model here
         fields = ['username', 'email', 'password1', 'password2']
         widgets = {
             'username': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Username'}),
             'password1': forms.PasswordInput(attrs={'class': 'form-control', 'placeholder': 'Password'}),
             'password2': forms.PasswordInput(attrs={'class': 'form-control', 'placeholder': 'Confirm Password'}),
         }
-    def clean_email(self):
-        email = self.cleaned_data.get('email')
-        if User.objects.filter(email=email).exists():
-            raise ValidationError("This email is already taken.")
-        return email
-
-    def clean_username(self):
-        username = self.cleaned_data.get('username')
-        if User.objects.filter(username=username).exists():
-            raise ValidationError("This username is already taken.")
-        return username
