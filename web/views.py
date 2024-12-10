@@ -80,6 +80,58 @@ def login_register_view(request):
         'register_form': register_form,
     })
 
+def shop_view(request):
+    brands = Brand.objects.all()
+    genders = Gender.objects.all()
+    types = Type.objects.all()
+
+    selected_brand = request.GET.get('brand', None)
+    selected_gender = request.GET.get('gender', None)
+    selected_price_range = request.GET.get('price_range', None)
+    selected_type = request.GET.get('type', None)
+
+    watches = Watch.objects.all()
+
+    if selected_brand:
+        watches = watches.filter(brand__brand_name=selected_brand)
+
+    if selected_gender:
+        watches = watches.filter(gender__gender_name=selected_gender)
+
+    if selected_price_range:
+        price_ranges = {
+            "0-50": (0, 50),
+            "51-100": (51, 100),
+            "101-200": (101, 200),
+            "201-500": (201, 500),
+            "500+": (500, None)
+        }
+        min_price, max_price = price_ranges.get(selected_price_range, (None, None))
+        if min_price is not None:
+            watches = watches.filter(price__gte=min_price)
+        if max_price is not None:
+            watches = watches.filter(price__lte=max_price)
+
+    if selected_type:
+        watches = watches.filter(type__type_name=selected_type)
+
+    paginator = Paginator(watches, 9)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    context = {
+        'watches': page_obj,
+        'brands': brands,
+        'genders': genders,
+        'types': types,
+        'selected_brand': selected_brand,
+        'selected_gender': selected_gender,
+        'selected_price_range': selected_price_range,
+        'selected_type': selected_type,
+    }
+
+    return render(request, 'shop.html', context)
+
 
 @login_required(login_url='login_register')
 def add_to_cart(request, watch_id):
